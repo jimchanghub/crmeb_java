@@ -38,7 +38,7 @@ public class LoginRequest implements Serializable {
     @JsonProperty(value = "account")
     private String phone;
 
-    @ApiModelProperty(value = "密码", required = true, example = "1~[6,18]")
+    @ApiModelProperty(value = "密码", required = true, example = "1~[3,18]")
 //    @Pattern(regexp = RegularConstants.PASSWORD, message = "密码格式错误，密码必须以字母开头，长度在6~18之间，只能包含字符、数字和下划线")
     private String password;
 

@@ -29,6 +29,7 @@ export function loginH5(data) {
  * @param data object 用户手机号 也只能
  */
 export function loginMobile(data) {
+	console.log(data)
   return request.post("login/mobile", data, { noAuth : true });
 }
 

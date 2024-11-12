@@ -5,11 +5,16 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisNode;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
@@ -19,6 +24,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Redis配置组件
@@ -36,69 +42,72 @@ import java.time.Duration;
 @EnableCaching
 public class RedisConfig {
 
-    @Value("${spring.redis.host}")
-    private String redisHost;
+//    @Value("${spring.redis.host}")
+//    private String redisHost;
+//
+//
+//    @Value("${spring.redis.port}")
+//    private int redisPort;
 
-    @Value("${spring.redis.port}")
-    private int redisPort;
+//    @Value("${spring.redis.password}")
+//    private String redisPass;
+//
+//    @Value("${spring.redis.database}")
+//    private int redisDb;
+//
+//    @Value("${spring.redis.timeout}")
+//    private String timeout;
+//
+//    @Value("${spring.redis.jedis.pool.max-active}")
+//    private int maxTotal;
+//
+//    @Value("${spring.redis.jedis.pool.max-idle}")
+//    private int maxIdle;
+//
+//    @Value("${spring.redis.jedis.pool.min-idle}")
+//    private int minIdle;
+//
+//    @Value("${spring.redis.jedis.pool.max-wait}")
+//    private int maxWaitMillis;
+//
+//    @Value("${spring.redis.jedis.pool.time-between-eviction-runs}")
+//    private String timeBetweenEvictionRunsMillis;
 
-    @Value("${spring.redis.password}")
-    private String redisPass;
-
-    @Value("${spring.redis.database}")
-    private int redisDb;
-
-    @Value("${spring.redis.timeout}")
-    private String timeout;
-
-    @Value("${spring.redis.jedis.pool.max-active}")
-    private int maxTotal;
-
-    @Value("${spring.redis.jedis.pool.max-idle}")
-    private int maxIdle;
-
-    @Value("${spring.redis.jedis.pool.min-idle}")
-    private int minIdle;
-
-    @Value("${spring.redis.jedis.pool.max-wait}")
-    private int maxWaitMillis;
-
-    @Value("${spring.redis.jedis.pool.time-between-eviction-runs}")
-    private String timeBetweenEvictionRunsMillis;
-
-    @Bean
-    public JedisPoolConfig jedisPoolConfig() {
-        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
-        jedisPoolConfig.setMaxIdle(maxIdle);
-        jedisPoolConfig.setMaxTotal(maxTotal);
-        jedisPoolConfig.setMaxWaitMillis(maxWaitMillis);
-        jedisPoolConfig.setMinIdle(minIdle);
-        jedisPoolConfig.setTimeBetweenEvictionRunsMillis(Integer.parseInt(timeBetweenEvictionRunsMillis));
-        return jedisPoolConfig;
-    }
-
-    @Bean
-    public RedisConnectionFactory taskConnectionFactory() {
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-        redisStandaloneConfiguration.setPort(redisPort);
-        redisStandaloneConfiguration.setHostName(redisHost);
-        redisStandaloneConfiguration.setDatabase(redisDb);
-        redisStandaloneConfiguration.setPassword(redisPass);
-        //获得默认的连接池构造
-        //这里需要注意的是，RedisConnectionFactoryJ对于Standalone模式的没有（RedisStandaloneConfiguration，jedisPoolConfig）的构造函数，对此
-        //我们用JedisClientConfiguration接口的builder方法实例化一个构造器，还得类型转换
-        JedisClientConfiguration.DefaultJedisClientConfigurationBuilder jpConfigBuilder = (JedisClientConfiguration.DefaultJedisClientConfigurationBuilder) JedisClientConfiguration.builder();
-        //修改我们的连接池配置
-        jpConfigBuilder.usePooling();
-        jpConfigBuilder.poolConfig(jedisPoolConfig());
-        jpConfigBuilder.readTimeout(Duration.ofMillis(Integer.parseInt(timeout)));
-        jpConfigBuilder.connectTimeout(Duration.ofMillis(Integer.parseInt(timeout)));
-        //通过构造器来构造jedis客户端配置
-        JedisClientConfiguration jedisClientConfiguration = jpConfigBuilder.build();
-        //配置连接池属性
-//        jedisConnectionFactory.setTimeout(Integer.parseInt(timeout));
-        return new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration);
-    }
+//    @Bean
+//    public JedisPoolConfig jedisPoolConfig() {
+//        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+//        jedisPoolConfig.setMaxIdle(maxIdle);
+//        jedisPoolConfig.setMaxTotal(maxTotal);
+//        jedisPoolConfig.setMaxWaitMillis(maxWaitMillis);
+//        jedisPoolConfig.setMinIdle(minIdle);
+//        jedisPoolConfig.setTimeBetweenEvictionRunsMillis(Integer.parseInt(timeBetweenEvictionRunsMillis));
+//        return jedisPoolConfig;
+//    }
+//
+//    @Bean
+//    public RedisConnectionFactory taskConnectionFactory(RedisProperties redisProperties) {
+//        RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration();
+//		List<String> nodes = redisProperties.getCluster().getNodes();
+//		for (String node : nodes) {
+//			String[] s = node.split(":");
+//            redisClusterConfiguration.clusterNode(s[0], Integer.parseInt(s[1]));
+//        }
+//        redisClusterConfiguration.setPassword(redisPass);
+//        //获得默认的连接池构造
+//        //这里需要注意的是，RedisConnectionFactoryJ对于Standalone模式的没有（RedisStandaloneConfiguration，jedisPoolConfig）的构造函数，对此
+//        //我们用JedisClientConfiguration接口的builder方法实例化一个构造器，还得类型转换
+//        JedisClientConfiguration.DefaultJedisClientConfigurationBuilder jpConfigBuilder = (JedisClientConfiguration.DefaultJedisClientConfigurationBuilder) JedisClientConfiguration.builder();
+//        //修改我们的连接池配置
+//        jpConfigBuilder.usePooling();
+//        jpConfigBuilder.poolConfig(jedisPoolConfig());
+//        jpConfigBuilder.readTimeout(Duration.ofMillis(Integer.parseInt(timeout)));
+//        jpConfigBuilder.connectTimeout(Duration.ofMillis(Integer.parseInt(timeout)));
+//        //通过构造器来构造jedis客户端配置
+//        JedisClientConfiguration jedisClientConfiguration = jpConfigBuilder.build();
+//        //配置连接池属性
+////        jedisConnectionFactory.setTimeout(Integer.parseInt(timeout));
+//        return new JedisConnectionFactory(redisClusterConfiguration, jedisClientConfiguration);
+//    }
 
     /**
      * redisTemplate相关配置
